@@ -43,6 +43,38 @@ Structured on the Heilmeier Catechism (required by the course). The older Claude
 - Runs on Colab via the VS Code extension: push, then pull inside `notebooks/colab_runner.ipynb`.
 - Team roles, gates and branch rules: README.md.
 
+## Course compute (ece661 CLI)
+
+Group credit: $250 Google credit, default $100 Gemini / $150 TPU (split editable on the portal's
+"My group" page until Dec 20). Docs: https://ece661-26fa-tpu.github.io. Each member has a
+personal course key (email "Your ECE 661 API key"). Never commit it; keep it in `ECE661_API_KEY`
+(`~/.zshrc`, Colab Secrets) and never paste it into chat.
+
+One-time setup per machine (the user runs these in their own terminal, not Claude):
+
+```bash
+curl -fsSL https://34-127-166-57.sslip.io/broker/cli/install.sh -o install.sh  # read, then:
+sh install.sh && rm install.sh   # installs into ~/.local/share/ece661, adds ~/.local/bin to PATH
+ece661 login                     # new terminal; paste key at hidden prompt (doesn't read the env var)
+ece661 ssh-key add ~/.ssh/id_ed25519.pub
+```
+
+Compute (billed per session-hour while running, so always stop it):
+
+```bash
+ece661 compute start --shape v6e-1 --hours 4   # TPU v6e, 1 chip; asks to confirm cost unless -y
+ece661 compute start --gpu                     # Nebius GPU VM: l40s-1 default, or --gpu h100-1
+ece661 compute list
+ece661 compute stop <id>
+```
+
+- Never pass `-y` (reserves "whatever it costs"). `--on-demand` exists, so the default is likely
+  spot/preemptible: checkpoint training.
+- GPU runs our PyTorch code as is; TPU needs a `torch_xla` port.
+- `ece661 workspace` (personal sessions with checkpoint backup) returns 403: not enabled for us.
+- From Claude's sandbox, CLI calls need `34-127-166-57.sslip.io` in `allowed_domains`.
+- Claude may run read-only commands (`compute list`, `--help`) but asks before `compute start`.
+
 ## LeJEPA essentials
 
 - Loss = `(1−λ)·prediction + λ·SIGReg`, with λ ≈ 0.05. The prediction term pulls each view's
