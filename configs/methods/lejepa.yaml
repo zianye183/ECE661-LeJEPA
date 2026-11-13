@@ -9,6 +9,7 @@ method:
   num_slices: 1024       # paper recommends 1024
   t_max: 3.0             # Epps-Pulley integration range [0, t_max] (library default)
   n_points: 17
+  sigreg_impl: ours      # learning branch: use sslbench/methods/sigreg.py (main: official)
 
 optim:
   name: adamw

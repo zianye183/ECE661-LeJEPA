@@ -3,8 +3,8 @@
 This mirrors the official implementation in the `lejepa` package
 (lejepa.univariate.EppsPulley + lejepa.multivariate.SlicingUnivariateTest), and
 tests/test_sigreg.py checks that both give the same numbers. LeJEPA training uses the
-official one by default (method.sigreg_impl: official); this file exists so we
-understand, and can modify, what SIGReg computes.
+official one by default on `main`. On this branch the LeJEPA config uses ours
+(method.sigreg_impl: ours), so training only works once Task 1 is done.
 """
 
 from __future__ import annotations
@@ -22,27 +22,19 @@ def epps_pulley(x: torch.Tensor, t_max: float = 3.0, n_points: int = 17) -> torc
     The integrand is symmetric in t, so we integrate over [0, t_max] with the
     trapezoid rule and double the weights.
     """
-    n = x.size(-2)
-    t = torch.linspace(0, t_max, n_points, device=x.device, dtype=x.dtype)
-    phi = torch.exp(-0.5 * t.square())  # CF of N(0, 1), also the Gaussian window w(t)
-    dt = t_max / (n_points - 1)
-    weights = torch.full_like(t, 2 * dt)
-    weights[0] = weights[-1] = dt
-    weights = weights * phi
-
-    xt = x.unsqueeze(-1) * t  # (..., N, K, T)
-    ecf_real = torch.cos(xt).mean(-3)  # (..., K, T): real part of the empirical CF
-    ecf_imag = torch.sin(xt).mean(-3)  # imaginary part
-    err = (ecf_real - phi).square() + ecf_imag.square()  # |ecf - phi|^2
-    return (err @ weights) * n
+    # TODO(1a): implement. See DIRECTIONS.md, Task 1.
+    # Steps: integration points t in [0, t_max]; phi(t) = exp(-t^2/2); trapezoid weights
+    # (doubled, because we only integrate t >= 0) times phi; empirical CF of each column
+    # (mean over the N axis, which is dim -2 of x); weighted squared error; times N.
+    raise NotImplementedError("epps_pulley")
 
 
 def random_directions(dim: int, num_slices: int, seed: int, device) -> torch.Tensor:
     """(dim, num_slices) matrix of unit-norm Gaussian directions, reproducible from `seed`."""
-    g = torch.Generator(device=device)
-    g.manual_seed(seed)
-    a = torch.randn((dim, num_slices), device=device, generator=g)
-    return a / a.norm(p=2, dim=0)
+    # TODO(1b): Gaussian (dim, num_slices) matrix from a torch.Generator seeded with `seed`,
+    # each column scaled to unit L2 norm. Must match the official package exactly: draw
+    # with torch.randn((dim, num_slices), device=device, generator=g).
+    raise NotImplementedError("random_directions")
 
 
 class SIGReg(nn.Module):
@@ -61,7 +53,6 @@ class SIGReg(nn.Module):
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """z: (..., N, D) -> scalar."""
-        with torch.no_grad():
-            a = random_directions(z.size(-1), self.num_slices, int(self.step.item()), z.device)
-            self.step.add_(1)
-        return epps_pulley(z @ a, self.t_max, self.n_points).mean()
+        # TODO(1c): directions from random_directions(..., seed=self.step) without gradients,
+        # then increment self.step; project z, apply epps_pulley, average everything.
+        raise NotImplementedError("SIGReg.forward")

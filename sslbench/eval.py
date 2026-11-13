@@ -25,16 +25,9 @@ def extract_features(model: nn.Module, ds: Dataset, device, batch_size: int = 51
 def knn_accuracy(train_f, train_y, test_f, test_y, num_classes: int, k: int = 20, temperature: float = 0.07,
                  chunk: int = 1024) -> float:
     """Weighted k-NN on cosine similarity (Wu et al., 2018): each neighbour votes exp(sim / T)."""
-    train_f = F.normalize(train_f, dim=1)
-    test_f = F.normalize(test_f, dim=1)
-    correct = 0
-    for start in range(0, len(test_f), chunk):
-        sims = test_f[start:start + chunk] @ train_f.T  # (B, N_train)
-        top_sim, top_idx = sims.topk(k, dim=1)
-        votes = torch.zeros(len(top_idx), num_classes)
-        votes.scatter_add_(1, train_y[top_idx], (top_sim / temperature).exp())
-        correct += (votes.argmax(1) == test_y[start:start + chunk]).sum().item()
-    return correct / len(test_f)
+    # TODO(4a): see DIRECTIONS.md, Task 4. Process test points in chunks of `chunk`
+    # to bound memory (CIFAR: 10k x 50k similarity matrix otherwise).
+    raise NotImplementedError("knn_accuracy")
 
 
 def linear_probe(train_f, train_y, test_f, test_y, num_classes: int, epochs: int = 100, lr: float = 0.1,
@@ -66,9 +59,8 @@ def effective_rank(feats: torch.Tensor, eps: float = 1e-12) -> float:
 
     Ranges from 1 (complete collapse) to min(N, D) (isotropic). Our collapse check.
     """
-    s = torch.linalg.svdvals(feats.double() - feats.double().mean(0))
-    p = s / (s.sum() + eps) + eps
-    return float(torch.exp(-(p * p.log()).sum()))
+    # TODO(4b): see DIRECTIONS.md, Task 4. Center the features first; use float64.
+    raise NotImplementedError("effective_rank")
 
 
 def evaluate(model: nn.Module, train_ds: Dataset, test_ds: Dataset, num_classes: int, cfg_eval: dict, device,

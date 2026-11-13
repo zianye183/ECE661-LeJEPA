@@ -12,13 +12,8 @@ from .base import SSLMethod, mlp
 def nt_xent(z1: torch.Tensor, z2: torch.Tensor, temperature: float) -> torch.Tensor:
     """z1, z2: (N, K) projections of two views. Each sample's positive is its other
     view; the other 2N - 2 samples in the batch are negatives."""
-    n = z1.size(0)
-    z = F.normalize(torch.cat([z1, z2]), dim=1)
-    logits = z @ z.T / temperature
-    self_mask = torch.eye(2 * n, dtype=torch.bool, device=z.device)
-    logits = logits.masked_fill(self_mask, float("-inf"))
-    targets = torch.cat([torch.arange(n, 2 * n), torch.arange(0, n)]).to(z.device)
-    return F.cross_entropy(logits, targets)
+    # TODO(3a): see DIRECTIONS.md, Task 3.
+    raise NotImplementedError("nt_xent")
 
 
 class SimCLR(SSLMethod):

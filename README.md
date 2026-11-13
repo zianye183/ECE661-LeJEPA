@@ -86,5 +86,5 @@ is measured, then epochs are locked → G3 all runs done → G4 poster (Dec 9).
 ## Branches
 
 - `main`: working implementation, use this for experiments.
-- `to-be-implemented`: same repo with the core algorithms removed, plus `DIRECTIONS.md`, for
+- `to-be-implemented` (this branch): core algorithms removed, see [DIRECTIONS.md](DIRECTIONS.md), for
   learning to implement them yourself. The tests are the grader.

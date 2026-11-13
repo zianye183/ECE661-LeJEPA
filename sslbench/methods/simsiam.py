@@ -11,9 +11,8 @@ from .base import SSLMethod, mlp
 
 def simsiam_loss(p1: torch.Tensor, p2: torch.Tensor, z1: torch.Tensor, z2: torch.Tensor) -> torch.Tensor:
     """Symmetric negative cosine similarity; targets z are detached (stop-gradient)."""
-    return -0.5 * (
-        F.cosine_similarity(p1, z2.detach(), dim=-1).mean() + F.cosine_similarity(p2, z1.detach(), dim=-1).mean()
-    )
+    # TODO(3b): see DIRECTIONS.md, Task 3. Remember the stop-gradient.
+    raise NotImplementedError("simsiam_loss")
 
 
 class SimSiam(SSLMethod):

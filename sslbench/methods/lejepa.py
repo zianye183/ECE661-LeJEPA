@@ -29,10 +29,8 @@ def lejepa_loss(proj: torch.Tensor, sigreg: nn.Module, lamb: float):
     (the leading V dim) and averaged.
     Returns (loss, prediction_loss, sigreg_loss).
     """
-    centers = proj.mean(0, keepdim=True)
-    pred = (centers - proj).square().mean()
-    sig = sigreg(proj)
-    return (1 - lamb) * pred + lamb * sig, pred, sig
+    # TODO(2a): see DIRECTIONS.md, Task 2. Return (loss, prediction_loss, sigreg_loss).
+    raise NotImplementedError("lejepa_loss")
 
 
 class LeJEPA(SSLMethod):
@@ -43,11 +41,7 @@ class LeJEPA(SSLMethod):
         self.sigreg = build_sigreg(cfg)
 
     def forward(self, views: torch.Tensor):
-        n, v = views.shape[:2]
-        emb = self.backbone(views.flatten(0, 1))  # (N*V, F), image-major
-        proj = self.projector(emb).reshape(n, v, -1).transpose(0, 1)  # (V, N, K)
-        # SIGReg uses cos/sin of projections: compute the loss in fp32.
-        with torch.autocast(device_type=views.device.type, enabled=False):
-            loss, pred, sig = lejepa_loss(proj.float(), self.sigreg, self.lamb)
-        logs = {"loss": loss.item(), "pred": pred.item(), "sigreg": sig.item()}
-        return loss, logs, emb.reshape(n, v, -1)[:, 0].detach()
+        # TODO(2b): run all N*V views through the backbone in one batch, project them,
+        # reshape to (V, N, K), compute lejepa_loss in fp32 (autocast disabled), and return
+        # (loss, logs dict with "loss", "pred", "sigreg", detached backbone features of view 0).
+        raise NotImplementedError("LeJEPA.forward")
