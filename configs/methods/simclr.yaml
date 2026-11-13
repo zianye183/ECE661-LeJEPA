@@ -1,0 +1,13 @@
+# SimCLR (Chen et al., 2020). Defaults follow common CIFAR-10 settings; tune in the Exp 2 sweep.
+method:
+  name: simclr
+  num_views: 2
+  temperature: 0.2
+  proj_dim: 128
+  proj_hidden: 2048
+
+optim:
+  name: sgd
+  lr: 0.3                # absolute LR for batch 256
+  momentum: 0.9
+  weight_decay: 5.0e-4

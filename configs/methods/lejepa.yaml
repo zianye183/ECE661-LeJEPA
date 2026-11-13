@@ -1,0 +1,16 @@
+# LeJEPA (Balestriero & LeCun, arXiv 2511.08544).
+# ResNet path: all views are "global" views (paper, Algorithm 2).
+method:
+  name: lejepa
+  num_views: 4           # MINIMAL.md uses V=4; paper recommends 2 global + 8 local for ViTs
+  lamb: 0.05             # paper's recommended default; swept in Experiment 3
+  proj_dim: 128
+  proj_hidden: 2048
+  num_slices: 1024       # paper recommends 1024
+  t_max: 3.0             # Epps-Pulley integration range [0, t_max] (library default)
+  n_points: 17
+
+optim:
+  name: adamw
+  lr: 2.0e-3
+  weight_decay: 5.0e-2

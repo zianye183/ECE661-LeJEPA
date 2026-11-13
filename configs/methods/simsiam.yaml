@@ -1,0 +1,13 @@
+# SimSiam (Chen & He, 2021). CIFAR settings from the paper's appendix; tune in the Exp 2 sweep.
+method:
+  name: simsiam
+  num_views: 2
+  proj_dim: 2048
+  proj_hidden: 2048
+  pred_hidden: 512
+
+optim:
+  name: sgd
+  lr: 0.06               # 0.03 * batch_size / 128 for batch 256
+  momentum: 0.9
+  weight_decay: 5.0e-4

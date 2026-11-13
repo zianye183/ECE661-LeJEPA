@@ -1,0 +1,16 @@
+# Tiny settings for a fast end-to-end check. Combine with any method:
+#   python train.py --method lejepa --config configs/smoke.yaml
+experiment: smoke
+data:
+  dataset: fake
+  num_workers: 0
+train:
+  epochs: 1
+  batch_size: 32
+  warmup_epochs: 0
+  save_every: 1
+eval:
+  linear_epochs: 2
+  label_fractions: [0.1, 1.0]
+method:
+  num_slices: 64

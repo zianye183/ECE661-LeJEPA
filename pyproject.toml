@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sslbench"
+version = "0.1.0"
+description = "ECE661 project: LeJEPA vs SimCLR vs SimSiam on CIFAR"
+requires-python = ">=3.10"
+dependencies = [
+  "torch>=2.1",
+  "torchvision>=0.16",
+  "numpy",
+  "pyyaml",
+  # Official LeJEPA code (SIGReg / Epps-Pulley), pinned to a known commit.
+  # Upstream license: CC BY-NC 4.0 (fine for coursework, not for commercial use).
+  "lejepa @ git+https://github.com/rbalestr-lab/lejepa.git@c293d291ca87cd4fddee9d3fffe4e914c7272052",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+log = ["wandb"]
+
+[tool.setuptools.packages.find]
+include = ["sslbench*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

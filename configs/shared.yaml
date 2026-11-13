@@ -1,0 +1,39 @@
+# Settings shared by ALL methods. Changing anything here after the G2 gate
+# needs approval from all three teammates (it changes every experiment).
+experiment: dev          # results go to results/<experiment>/<method>/<dataset>/s<seed>.json
+seed: 0
+
+data:
+  dataset: cifar10       # cifar10 | cifar100 | fake (fake = random images, for tests)
+  root: ./data
+  fraction: 1.0          # fraction of the train set used for pretraining (class-balanced)
+  num_workers: 4
+  augment:               # SimCLR-style CIFAR augmentations, used by every method
+    crop_scale: [0.2, 1.0]
+    color_jitter: [0.4, 0.4, 0.4, 0.1]
+    color_jitter_p: 0.8
+    grayscale_p: 0.2
+
+backbone:
+  name: resnet18_cifar   # resnet18_cifar | timm:<model_name>
+
+train:
+  epochs: 200            # lock after measuring cost per run (G2)
+  batch_size: 256
+  warmup_epochs: 10
+  amp: true              # bf16 autocast on CUDA only
+  online_probe: true     # linear probe on detached features, trained alongside (monitoring only)
+  save_every: 20         # epochs between checkpoints
+
+eval:
+  knn_k: 20
+  knn_temperature: 0.07
+  linear_epochs: 100
+  linear_lr: 0.1
+  linear_batch_size: 1024
+  label_fractions: [0.01, 0.1, 1.0]   # 1%, 10%, 100% label probes
+  label_subset_seed: 0
+
+logging:
+  wandb: false
+  wandb_project: ece661-lejepa

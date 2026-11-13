@@ -1,0 +1,15 @@
+# Replace the placeholders with GitHub usernames. PRs touching these paths
+# request a review from the owner. See README "Team workflow".
+*                             @PERSON_A
+/sslbench/data.py             @PERSON_A
+/sslbench/eval.py             @PERSON_A
+/sslbench/utils.py            @PERSON_A
+/train.py                     @PERSON_A
+/configs/shared.yaml          @PERSON_A @PERSON_B @PERSON_C
+/sslbench/methods/lejepa.py   @PERSON_B
+/sslbench/methods/sigreg.py   @PERSON_B
+/configs/methods/lejepa.yaml  @PERSON_B
+/sslbench/methods/simclr.py   @PERSON_C
+/sslbench/methods/simsiam.py  @PERSON_C
+/configs/methods/simclr.yaml  @PERSON_C
+/configs/methods/simsiam.yaml @PERSON_C
