@@ -1,13 +1,16 @@
-# SimSiam (Chen & He, 2021). CIFAR settings from the paper's appendix; tune in the Exp 2 sweep.
+# SimSiam (Chen & He, 2021), CIFAR-10 recipe from Appendix D: CIFAR ResNet-18, 2-layer
+# projector with 2048-d output, predictor bottleneck 512, SGD base lr 0.03 x batch/256,
+# wd 5e-4, momentum 0.9, batch 512, 800 epochs, no blur. Reported: 91.8% linear probe.
 method:
   name: simsiam
   num_views: 2
+  proj_layers: 2
   proj_dim: 2048
   proj_hidden: 2048
   pred_hidden: 512
 
 optim:
   name: sgd
-  lr: 0.06               # 0.03 * batch_size / 128 for batch 256
+  base_lr: 0.03          # scaled: lr = base_lr * batch_size / 256
   momentum: 0.9
   weight_decay: 5.0e-4

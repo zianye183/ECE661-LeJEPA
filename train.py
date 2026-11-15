@@ -26,6 +26,7 @@ from torch import nn
 from sslbench.data import NUM_CLASSES, eval_datasets, pretrain_loader
 from sslbench.eval import evaluate
 from sslbench.methods import build_method
+from sslbench.optim import build_optimizer
 from sslbench.utils import append_jsonl, load_config, pick_device, set_seed, warmup_cosine, write_json
 
 
@@ -42,13 +43,15 @@ def parse_args(argv=None):
     return p.parse_args(argv)
 
 
-def build_optimizer(params, cfg: dict) -> torch.optim.Optimizer:
-    o = cfg["optim"]
-    if o["name"] == "adamw":
-        return torch.optim.AdamW(params, lr=o["lr"], weight_decay=o["weight_decay"])
-    if o["name"] == "sgd":
-        return torch.optim.SGD(params, lr=o["lr"], momentum=o["momentum"], weight_decay=o["weight_decay"])
-    raise ValueError(f"Unknown optimizer {o['name']!r}")
+def amp_dtype(device: torch.device) -> torch.dtype | None:
+    """bf16 where the GPU supports it natively (A100/L4/H100), else fp16 (e.g. Colab T4)."""
+    if device.type != "cuda":
+        return None
+    try:
+        native_bf16 = torch.cuda.is_bf16_supported(including_emulation=False)
+    except TypeError:  # older torch
+        native_bf16 = torch.cuda.get_device_capability()[0] >= 8
+    return torch.bfloat16 if native_bf16 else torch.float16
 
 
 def main(argv=None) -> dict:
@@ -68,18 +71,14 @@ def main(argv=None) -> dict:
     model = build_method(cfg).to(device)
     # Online probe: trained on detached features, never affects the backbone. Monitoring only.
     probe = nn.Linear(model.feat_dim, num_classes).to(device) if cfg["train"]["online_probe"] else None
-    params = [{"params": model.parameters()}]
-    if probe is not None:
-        params.append({"params": probe.parameters(), "lr": 1e-3, "weight_decay": 0.0})
-    opt = build_optimizer(params, cfg)
-    if probe is not None and cfg["optim"]["name"] == "sgd":
-        opt.param_groups[1]["lr"] = 0.1  # plain SGD needs a larger probe LR than AdamW
+    opt = build_optimizer(model.parameters(), probe.parameters() if probe is not None else [], cfg)
     base_lrs = [g["lr"] for g in opt.param_groups]
 
     epochs = cfg["train"]["epochs"]
     total_steps = epochs * len(loader)
     warmup_steps = cfg["train"]["warmup_epochs"] * len(loader)
-    use_amp = cfg["train"]["amp"] and device.type == "cuda"
+    dtype = amp_dtype(device) if cfg["train"]["amp"] else None
+    scaler = torch.amp.GradScaler("cuda", enabled=dtype == torch.float16)
     start_epoch, step = 0, 0
     ckpt_path = run_dir / "last.pt"
     if args.resume and ckpt_path.exists():
@@ -107,7 +106,7 @@ def main(argv=None) -> dict:
             for group, lr in zip(opt.param_groups, base_lrs):
                 group["lr"] = lr * mult
             views, y = views.to(device, non_blocking=True), y.to(device, non_blocking=True)
-            with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=use_amp):
+            with torch.autocast(device_type="cuda", dtype=dtype or torch.bfloat16, enabled=dtype is not None):
                 loss, logs, feats = model(views)
                 if probe is not None:
                     logits = probe(feats)
@@ -116,8 +115,9 @@ def main(argv=None) -> dict:
                     logs["probe_acc"] = (logits.argmax(1) == y).float().mean().item()
                     loss = loss + probe_loss
             opt.zero_grad(set_to_none=True)
-            loss.backward()
-            opt.step()
+            scaler.scale(loss).backward()
+            scaler.step(opt)
+            scaler.update()
             step += 1
             for key, val in logs.items():
                 sums[key] = sums.get(key, 0.0) + val

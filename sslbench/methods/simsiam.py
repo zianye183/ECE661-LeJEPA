@@ -20,7 +20,9 @@ class SimSiam(SSLMethod):
     def __init__(self, backbone: nn.Module, feat_dim: int, cfg: dict):
         super().__init__(backbone, feat_dim)
         h, d = cfg["proj_hidden"], cfg["proj_dim"]
-        self.projector = mlp([feat_dim, h, h, d], last_bn=True, last_bn_affine=False)
+        # CIFAR recipe (SimSiam paper, Appendix D) uses a 2-layer projector; ImageNet uses 3.
+        dims = [feat_dim] + [h] * (cfg.get("proj_layers", 3) - 1) + [d]
+        self.projector = mlp(dims, last_bn=True, last_bn_affine=False)
         self.predictor = mlp([d, cfg["pred_hidden"], d])
 
     def forward(self, views: torch.Tensor):

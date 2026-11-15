@@ -1,13 +1,16 @@
-# SimCLR (Chen et al., 2020). Defaults follow common CIFAR-10 settings; tune in the Exp 2 sweep.
+# SimCLR (Chen et al., 2020), CIFAR-10 recipe from Appendix B.9: LARS, lr in {0.5, 1.0, 1.5},
+# temperature 0.5 (best when training > 300 epochs), color distortion 0.5, no blur, other
+# settings as ImageNet (wd 1e-6, 10 warmup epochs, cosine). The paper's backbone is ResNet-50
+# (94.0%); with ResNet-18 the SimSiam paper reports 91.1% at 800 epochs.
 method:
   name: simclr
   num_views: 2
-  temperature: 0.2
+  temperature: 0.5
   proj_dim: 128
   proj_hidden: 2048
 
 optim:
-  name: sgd
-  lr: 0.3                # absolute LR for batch 256
+  name: lars
+  lr: 1.0                # absolute (the paper sweeps 0.5 / 1.0 / 1.5 on CIFAR-10)
   momentum: 0.9
-  weight_decay: 5.0e-4
+  weight_decay: 1.0e-6

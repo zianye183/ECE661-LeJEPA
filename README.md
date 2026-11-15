@@ -52,15 +52,15 @@ Every run writes `runs/<experiment>/<method>/<dataset>/s<seed>/` (config, per-ep
 `metrics.jsonl`, `last.pt`) and `results/<experiment>/<method>/<dataset>/s<seed>.json`
 (final metrics). `--resume` continues from `last.pt` after a Colab disconnect.
 
-## Colab through VS Code
+## Colab
 
-The Colab VS Code extension runs the notebook kernel on a Colab VM; your local checkout is
-not on that VM. So:
+`notebooks/colab_runner.ipynb` does everything in one go: mounts Google Drive, pulls this
+repo, runs the tests, measures cost per epoch, trains all three methods on CIFAR-10 and
+writes results, a summary CSV and training curves to `MyDrive/ECE661/lejepa`. Open it in
+Colab (or VS Code with the Colab extension), pick a GPU runtime and *Run all*. After a
+disconnect, *Run all* again: finished runs are skipped and unfinished ones resume.
 
-1. Edit code locally, commit, `git push` your branch.
-2. Open `notebooks/colab_runner.ipynb` in VS Code, select a Colab GPU kernel.
-3. Set `REPO_URL` / `BRANCH`, run the **Get the code** cell (clones, or pulls on re-run).
-4. Run. Keep `--runs-dir` / `--results-dir` on Google Drive so they survive disconnects.
+The notebook runs code from GitHub, not your local checkout: push before re-running.
 
 ## Team workflow
 

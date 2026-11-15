@@ -38,3 +38,25 @@ def test_class_balanced_subsets_are_balanced_and_nested():
     big = class_balanced_indices(targets, 0.5, seed=0)
     assert len(small) == 100 and np.all(np.bincount(targets[small]) == 10)
     assert set(small) <= set(big)
+
+
+def test_lars_and_lr_scaling():
+    from sslbench.optim import LARS, build_optimizer, resolve_lr
+
+    assert resolve_lr({"base_lr": 0.03}, 512) == 0.06
+    assert resolve_lr({"lr": 1.0, "base_lr": 0.03}, 512) == 1.0
+    torch.manual_seed(0)
+    w = torch.nn.Parameter(torch.randn(8, 8))
+    target = torch.randn(8, 8)
+    opt = LARS([w], lr=1.0, momentum=0.9, weight_decay=0.0)
+    first = None
+    for _ in range(200):
+        loss = (w - target).square().sum()
+        first = first if first is not None else loss.item()
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+    assert loss.item() < 0.5 * first
+    cfg = {"optim": {"name": "lars", "lr": 1.0, "momentum": 0.9, "weight_decay": 1e-6}, "train": {"batch_size": 256}}
+    opt = build_optimizer([w], [torch.nn.Parameter(torch.zeros(3, 3))], cfg)
+    assert opt.param_groups[1]["lars_exclude"] and opt.param_groups[1]["lr"] == 0.1
