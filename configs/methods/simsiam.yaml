@@ -14,3 +14,7 @@ optim:
   base_lr: 0.03          # scaled: lr = base_lr * batch_size / 256
   momentum: 0.9
   weight_decay: 5.0e-4
+  fix_pred_lr: true      # predictor keeps a constant lr (paper: slightly better, used in its code)
+
+train:
+  warmup_epochs: 0       # paper warms up only for batch >= 1024

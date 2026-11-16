@@ -58,5 +58,21 @@ def test_lars_and_lr_scaling():
         opt.step()
     assert loss.item() < 0.5 * first
     cfg = {"optim": {"name": "lars", "lr": 1.0, "momentum": 0.9, "weight_decay": 1e-6}, "train": {"batch_size": 256}}
-    opt = build_optimizer([w], [torch.nn.Parameter(torch.zeros(3, 3))], cfg)
+    model = torch.nn.Linear(8, 8)
+    opt = build_optimizer(model, [torch.nn.Parameter(torch.zeros(3, 3))], cfg)
     assert opt.param_groups[1]["lars_exclude"] and opt.param_groups[1]["lr"] == 0.1
+
+
+def test_fix_pred_lr_puts_predictor_in_its_own_group():
+    from sslbench.backbones import build_backbone
+    from sslbench.methods.simsiam import SimSiam
+    from sslbench.optim import build_optimizer
+
+    backbone, dim = build_backbone("resnet18_cifar")
+    model = SimSiam(backbone, dim, {"proj_hidden": 64, "proj_dim": 32, "pred_hidden": 16, "proj_layers": 2})
+    cfg = {"optim": {"name": "sgd", "base_lr": 0.03, "momentum": 0.9, "weight_decay": 5e-4, "fix_pred_lr": True},
+           "train": {"batch_size": 256}}
+    opt = build_optimizer(model, [], cfg)
+    assert len(opt.param_groups) == 2 and opt.param_groups[1].get("fixed_lr")
+    n_model = sum(1 for _ in model.parameters())
+    assert sum(len(g["params"]) for g in opt.param_groups) == n_model

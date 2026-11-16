@@ -30,8 +30,9 @@ class SimSiam(SSLMethod):
         emb = self.backbone(views[:, :2].transpose(0, 1).flatten(0, 1))  # view-major: (2N, F)
         z = self.projector(emb)
         p = self.predictor(z)
-        z1, z2, p1, p2 = z[:n], z[n:], p[:n], p[n:]
-        loss = simsiam_loss(p1, p2, z1, z2)
+        z1, z2, p1, p2 = z[:n].float(), z[n:].float(), p[:n].float(), p[n:].float()
+        with torch.autocast(device_type=views.device.type, enabled=False):
+            loss = simsiam_loss(p1, p2, z1, z2)
         # Collapse check from the SimSiam paper: std of normalized z per dim ~ 1/sqrt(d) if healthy.
         z_std = F.normalize(z1.detach().float(), dim=1).std(0).mean().item()
         return loss, {"loss": loss.item(), "z_std": z_std}, emb[:n].detach()

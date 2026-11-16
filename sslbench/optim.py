@@ -46,12 +46,20 @@ def resolve_lr(optim_cfg: dict, batch_size: int) -> float:
     return optim_cfg["base_lr"] * batch_size / 256
 
 
-def build_optimizer(model_params, probe_params, cfg: dict) -> torch.optim.Optimizer:
+def build_optimizer(model: torch.nn.Module, probe_params, cfg: dict) -> torch.optim.Optimizer:
     """Optimizer for the SSL model, plus a plain group for the online probe (lr 0.1 SGD-style,
-    or 1e-3 for AdamW). The probe group never uses LARS scaling or weight decay."""
+    or 1e-3 for AdamW). The probe group never uses LARS scaling or weight decay.
+
+    With `optim.fix_pred_lr: true` (SimSiam paper), the model's `predictor` gets its own
+    group marked `fixed_lr`, which the training loop keeps at the base LR (no warmup/decay).
+    """
     o = cfg["optim"]
     lr = resolve_lr(o, cfg["train"]["batch_size"])
-    groups = [{"params": list(model_params)}]
+    predictor = getattr(model, "predictor", None) if o.get("fix_pred_lr") else None
+    pred_ids = {id(q) for q in predictor.parameters()} if predictor is not None else set()
+    groups = [{"params": [q for q in model.parameters() if id(q) not in pred_ids]}]
+    if predictor is not None:
+        groups.append({"params": list(predictor.parameters()), "fixed_lr": True})
     probe_params = list(probe_params)
     if o["name"] == "adamw":
         if probe_params:

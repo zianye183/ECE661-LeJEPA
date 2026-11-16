@@ -71,7 +71,7 @@ def main(argv=None) -> dict:
     model = build_method(cfg).to(device)
     # Online probe: trained on detached features, never affects the backbone. Monitoring only.
     probe = nn.Linear(model.feat_dim, num_classes).to(device) if cfg["train"]["online_probe"] else None
-    opt = build_optimizer(model.parameters(), probe.parameters() if probe is not None else [], cfg)
+    opt = build_optimizer(model, probe.parameters() if probe is not None else [], cfg)
     base_lrs = [g["lr"] for g in opt.param_groups]
 
     epochs = cfg["train"]["epochs"]
@@ -79,7 +79,7 @@ def main(argv=None) -> dict:
     warmup_steps = cfg["train"]["warmup_epochs"] * len(loader)
     dtype = amp_dtype(device) if cfg["train"]["amp"] else None
     scaler = torch.amp.GradScaler("cuda", enabled=dtype == torch.float16)
-    start_epoch, step = 0, 0
+    start_epoch, step, elapsed_before = 0, 0, 0.0
     ckpt_path = run_dir / "last.pt"
     if args.resume and ckpt_path.exists():
         ckpt = torch.load(ckpt_path, map_location=device)
@@ -88,6 +88,7 @@ def main(argv=None) -> dict:
         if probe is not None:
             probe.load_state_dict(ckpt["probe"])
         start_epoch, step = ckpt["epoch"] + 1, ckpt["step"]
+        elapsed_before = ckpt.get("elapsed_s", 0.0)  # training time from earlier sessions
         print(f"Resumed from epoch {start_epoch}")
 
     use_wandb = cfg["logging"]["wandb"]
@@ -104,7 +105,7 @@ def main(argv=None) -> dict:
         for views, y in loader:
             mult = warmup_cosine(step, warmup_steps, total_steps)
             for group, lr in zip(opt.param_groups, base_lrs):
-                group["lr"] = lr * mult
+                group["lr"] = lr if group.get("fixed_lr") else lr * mult
             views, y = views.to(device, non_blocking=True), y.to(device, non_blocking=True)
             with torch.autocast(device_type="cuda", dtype=dtype or torch.bfloat16, enabled=dtype is not None):
                 loss, logs, feats = model(views)
@@ -122,7 +123,7 @@ def main(argv=None) -> dict:
             for key, val in logs.items():
                 sums[key] = sums.get(key, 0.0) + val
         record = {"epoch": epoch, "step": step, "lr": opt.param_groups[0]["lr"],
-                  "time_s": round(time.time() - t0, 1),
+                  "time_s": round(elapsed_before + time.time() - t0, 1),
                   **{k: v / len(loader) for k, v in sums.items()}}
         if device.type == "cuda":
             record["peak_mem_gb"] = round(torch.cuda.max_memory_allocated() / 1e9, 2)
@@ -133,9 +134,10 @@ def main(argv=None) -> dict:
         if (epoch + 1) % cfg["train"]["save_every"] == 0 or epoch + 1 == epochs:
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
                         "probe": probe.state_dict() if probe is not None else None,
-                        "epoch": epoch, "step": step, "config": cfg}, ckpt_path)
+                        "epoch": epoch, "step": step, "config": cfg,
+                        "elapsed_s": elapsed_before + time.time() - t0}, ckpt_path)
 
-    train_time = time.time() - t0
+    train_time = elapsed_before + time.time() - t0  # total across resumed sessions
     if args.skip_eval:
         return {}
     train_ds, test_ds = eval_datasets(cfg)
