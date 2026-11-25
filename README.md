@@ -62,6 +62,27 @@ disconnect, *Run all* again: finished runs are skipped and unfinished ones resum
 
 The notebook runs code from GitHub, not your local checkout: push before re-running.
 
+## Duke CS cluster (Slurm)
+
+Everything lives in `/usr/xtmp/$USER/ece661-lejepa` (`repo/`, `venv/`, `data/`, `runs/`,
+`results/`, `logs/`). One-time setup on the login node:
+
+```bash
+PYTHON=/path/to/python3.11 BRANCH=main bash scripts/slurm/setup_cluster.sh
+```
+
+A manifest has one line of `train.py` arguments per run; `submit.sh` turns it into a job
+array (one A5000 per run):
+
+```bash
+cd /usr/xtmp/$USER/ece661-lejepa/repo && git pull
+scripts/slurm/submit.sh scripts/slurm/manifests/g2_check.txt
+squeue -u $USER
+python scripts/collect_results.py ../results
+```
+
+Re-submitting the same manifest resumes unfinished runs from `last.pt`.
+
 ## Team workflow
 
 | Person | Owns | Deliverable |

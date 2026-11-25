@@ -1,0 +1,4 @@
+--method simsiam --seed 0 --set experiment=simsiam_fix_e100 --set train.epochs=100
+--method lejepa --seed 0 --set experiment=cost_probe_a5000 --set train.epochs=1 --skip-eval
+--method simclr --seed 0 --set experiment=cost_probe_a5000 --set train.epochs=1 --skip-eval
+--method simsiam --seed 0 --set experiment=cost_probe_a5000 --set train.epochs=1 --skip-eval
