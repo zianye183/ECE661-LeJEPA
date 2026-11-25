@@ -1,0 +1,15 @@
+--method lejepa --seed 0 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.0
+--method lejepa --seed 1 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.0
+--method lejepa --seed 2 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.0
+--method lejepa --seed 0 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.01
+--method lejepa --seed 1 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.01
+--method lejepa --seed 2 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.01
+--method lejepa --seed 0 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.02
+--method lejepa --seed 1 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.02
+--method lejepa --seed 2 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.02
+--method lejepa --seed 0 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.1
+--method lejepa --seed 1 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.1
+--method lejepa --seed 2 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.1
+--method lejepa --seed 0 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.2
+--method lejepa --seed 1 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.2
+--method lejepa --seed 2 --set experiment=exp3_lambda --set data.dataset=cifar100 --set method.lamb=0.2

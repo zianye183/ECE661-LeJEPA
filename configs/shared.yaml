@@ -18,12 +18,12 @@ backbone:
   name: resnet18_cifar   # resnet18_cifar | timm:<model_name>
 
 train:
-  epochs: 200            # lock after measuring cost per run (G2)
+  epochs: 200            # LOCKED 2026-11-25 (G2): A5000 ~26-36 s/epoch
   batch_size: 256
   warmup_epochs: 10
   amp: true              # bf16 autocast on CUDA only
   online_probe: true     # linear probe on detached features, trained alongside (monitoring only)
-  save_every: 20         # epochs between checkpoints
+  save_every: 10         # epochs between checkpoints (resume granularity)
 
 eval:
   knn_k: 20
