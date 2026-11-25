@@ -12,6 +12,7 @@ dependencies = [
   "torchvision>=0.16",
   "numpy",
   "pyyaml",
+  "scipy",               # imported by the lejepa package but not declared there
   # Official LeJEPA code (SIGReg / Epps-Pulley), pinned to a known commit.
   # Upstream license: CC BY-NC 4.0 (fine for coursework, not for commercial use).
   "lejepa @ git+https://github.com/rbalestr-lab/lejepa.git@c293d291ca87cd4fddee9d3fffe4e914c7272052",
